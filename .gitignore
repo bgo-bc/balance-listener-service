@@ -1,0 +1,28 @@
+# Python
+__pycache__
+.python-version
+.coverage
+pytest.ini
+
+# alembic
+alembic.ini
+alembic/
+
+# setup
+build/
+dist/
+*.egg-info/
+
+#ide
+.idea/
+.vscode
+
+# env
+.env/
+env/
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store

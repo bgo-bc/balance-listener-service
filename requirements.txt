@@ -1,0 +1,14 @@
+APScheduler==3.11.0
+ccxt==4.5.11
+fastapi==0.119.1
+fastapi-cli==0.0.13
+fastapi-cloud-cli==0.3.1
+httptools==0.7.1
+loguru==0.7.3
+pip==25.2
+python-dotenv==1.1.1
+python-multipart==0.0.20
+PyYAML==6.0.3
+uvloop==0.22.1
+watchfiles==1.1.1
+websockets==15.0.1
