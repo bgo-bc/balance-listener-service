@@ -3,7 +3,7 @@ from typing import Dict
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from app.utils.queue import TaskQueue
-from app.type_defs import BalanceTask
+from app.type_defs import FetchTask
 from app.utils.logging import get_logger
 
 logger = get_logger("scheduler")
@@ -17,7 +17,7 @@ class Scheduler:
 
     async def enqueue_account(self, account_id: str, type: str):
         try:
-            task = BalanceTask(account_id=account_id, type=type)
+            task = FetchTask(account_id=account_id, type=type)
             logger.info(f"Enqueueing {type} balance task for account {account_id}")
             await self.queue.put(task.model_dump())
         except Exception as e:
@@ -32,10 +32,10 @@ class Scheduler:
             await self.enqueue_account(account_id, type)
 
     async def _balance_check_job(self):
-        await self.enqueue_all_accounts("balance")
+        await self.enqueue_all_accounts("balances")
 
     async def _funding_fee_check_job(self):
-        await self.enqueue_all_accounts("funding_fee")
+        await self.enqueue_all_accounts("funding_fees")
 
     async def start(self):
         if self.scheduler.running:

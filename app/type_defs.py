@@ -6,7 +6,7 @@ class ListenRequest(BaseModel):
     account_id: str
 
 
-class BalanceTask(BaseModel):
+class FetchTask(BaseModel):
     account_id: str
     type: str
 
