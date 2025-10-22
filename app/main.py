@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from app.utils.queue import TaskQueue
 from app.task_scheduler import Scheduler
 from app.worker_pool import WorkerPool
-from app.task_handler import TaskProcessor
+from app.task_handler import FetchTaskHandler
 from app.type_defs import ListenRequest
 from app.utils.logging import get_logger
 
@@ -29,8 +29,8 @@ async def lifespan(app: FastAPI):
     scheduler = Scheduler(LISTENING_ACCOUNTS, TASK_QUEUE)
     await scheduler.start()
 
-    processor = TaskProcessor()
-    worker_pool = WorkerPool(TASK_QUEUE, processor, worker_count=4)
+    task_handler = FetchTaskHandler()
+    worker_pool = WorkerPool(TASK_QUEUE, task_handler, worker_count=4)
     await worker_pool.start()
 
     yield

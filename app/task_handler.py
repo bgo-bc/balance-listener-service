@@ -1,11 +1,12 @@
 from app.credentials import get_credentials_for_account
 from app.ccxt.adapter import CCXTAdapter
 from app.utils.logging import get_logger
+from app.type_defs import TaskProcessor
 
 logger = get_logger("task_processor")
 
 
-class TaskProcessor:
+class FetchTaskHandler(TaskProcessor):
     async def process(self, task: dict):
         account_id = task.get("account_id")
         fetch_type = task.get("type", "balances")
