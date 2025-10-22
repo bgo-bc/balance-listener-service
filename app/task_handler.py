@@ -1,5 +1,5 @@
 from app.credentials import get_credentials_for_account
-from app.ccxt_adapter.adapters import get_adapter
+from app.ccxt.adapters import get_adapter
 from app.utils.logging import get_logger
 from app.type_defs import TaskProcessor
 
@@ -57,4 +57,5 @@ class FetchTaskHandler(TaskProcessor):
     async def _publish(self, topic: str, data):
         # TODO: Replace with NATS publish
         size = len(data) if isinstance(data, dict) else "?"
-        logger.info(f"[PUBLISH] topic: {topic}, count: {size}, data: {data}")
+        # logger.info(f"[PUBLISH] topic: {topic}, count: {size}, data: {data}")
+        logger.info(f"[PUBLISH] topic: {topic}, count: {size}")

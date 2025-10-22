@@ -1,6 +1,6 @@
-from app.ccxt_adapter.base import BaseAdapter
-from app.ccxt_adapter.binance import BinanceAdapter
-from app.ccxt_adapter.deribit import DeribitAdapter
+from app.ccxt.base import BaseAdapter
+from app.ccxt.binance import BinanceAdapter
+from app.ccxt.deribit import DeribitAdapter
 
 ADAPTERS = {
     "binance": BinanceAdapter,

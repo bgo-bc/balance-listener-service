@@ -36,7 +36,7 @@ This structure allows easy migration from a single-process design to a distribut
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=app uvicorn main:app
+uvicorn app.main:app
 ```
 
 You can register an account to listen to from the swagger page (http://localhost:8000/docs)

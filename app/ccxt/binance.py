@@ -1,18 +1,20 @@
 from typing import Dict, Any, List, Optional
 from ccxt.base.exchange import Exchange
 import ccxt.async_support as ccxt
-from app.ccxt_adapter.base import BaseAdapter
+from app.ccxt.base import BaseAdapter
 from app.utils.logging import get_logger
-
 
 logger = get_logger("ccxt_binance_adapter")
 
 
-class DeribitAdapter(BaseAdapter):
+class BinanceAdapter(BaseAdapter):
     def __init__(self, exchange_id: str, credentials: Optional[dict[str, str]] = None):
         super().__init__(exchange_id, credentials)
+        self.connectors = {
+            "default": self.exchange_id,
+            "balance": "binance",
+            "options": "binance",
+            "positions": "binanceusdm",
+        }
 
-    async def fetch_options_balance(self) -> Dict[str, Any]:
-        return await super().fetch_positions(params={
-            "kind": "option"
-        })
+
