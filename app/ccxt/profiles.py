@@ -26,9 +26,9 @@ class ExchangeProfile:
 
 EXCHANGE_PROFILES: Dict[str, ExchangeProfile] = {
     "binance": ExchangeProfile({
-        "spot": "binance",
+        "balance": "binance",
         "options": "binance",
-        "futures": "binanceusdm",
+        "positions": "binanceusdm",
     }),
     "deribit": ExchangeProfile({
         "default": "deribit",

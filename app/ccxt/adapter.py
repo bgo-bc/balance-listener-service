@@ -42,23 +42,51 @@ class CCXTAdapter:
     async def fetch_balances(self) -> List[Dict[str, Any]]:
         balances = []
 
-        # spot
-        spot = self.exchanges.get("spot") or self.exchanges.get("default")
-        spot_balance = await spot.fetch_balance()
+        balance = await self.fetch_balance()
+        if balance:
+            balances.append({
+                "category": "balance",
+                "data": balance
+            })
 
-        balances.append({
-            "category": "spot",
-            "data": spot_balance
-        })
+        earn = await self.fetch_earn_balance()
+        if earn:
+            balances.append({
+                "category": "earn",
+                "data": earn
+            })
 
-        # TODO: fetch earn balance and append to 'balances'
+        positions = await self.fetch_positions()
+        if positions:
+            balances.append({
+                "category": "positions",
+                "data": positions
+            })
 
-        # TODO: fetch positions balance and append to 'balances'
-
-        # TODO: fetch options balance and append to 'balances'
+        options = await self.fetch_options_balance()
+        if options:
+            balances.append({
+                "category": "options",
+                "data": options
+            })
 
         return balances
 
+    async def fetch_balance(self) -> Dict[str, Any]:
+        exchange = self.exchanges.get("balance") or self.exchanges.get("default")
+        balance = await exchange.fetch_balance()
+        return balance
+
+    async def fetch_positions(self) -> Dict[str, Any]:
+        exchange = self.exchanges.get("positions") or self.exchanges.get("default")
+        positions = await exchange.fetch_positions()
+        return positions
+
+    async def fetch_options_balance(self) -> Dict[str, Any]:
+        return None
+
+    async def fetch_earn_balance(self) -> Dict[str, Any]:
+        return None
 
     async def fetch_funding_fees(self) -> List[Dict[str, Any]]:
         # self.exchange.fetch_funding_rate_history()

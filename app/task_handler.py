@@ -56,4 +56,4 @@ class FetchTaskHandler(TaskProcessor):
     async def _publish(self, topic: str, data):
         # TODO: Replace with NATS publish
         size = len(data) if isinstance(data, dict) else "?"
-        logger.info(f"[PUBLISH] {topic} ({size} items)")
+        logger.info(f"[PUBLISH] topic: {topic}, count: {size}, data: {data}")
