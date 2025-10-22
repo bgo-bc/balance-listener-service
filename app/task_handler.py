@@ -1,5 +1,5 @@
 from app.credentials import get_credentials_for_account
-from app.ccxt.adapter import CCXTAdapter
+from app.ccxt_adapter.adapters import get_adapter
 from app.utils.logging import get_logger
 from app.type_defs import TaskProcessor
 
@@ -19,7 +19,8 @@ class FetchTaskHandler(TaskProcessor):
         exchange = creds_info.get("exchange")
         credentials = creds_info.get("credentials")
 
-        async with CCXTAdapter(exchange, credentials) as adapter:
+        exchange_adapter = await get_adapter(exchange, credentials)
+        async with exchange_adapter as adapter:
             try:
                 if fetch_type == "balances":
                     # Fetch all balances (spot, earn, futures, etc.)
