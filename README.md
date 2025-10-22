@@ -29,3 +29,14 @@ Balances are fetched periodically by a scheduler. Accounts to be monitored are r
 This structure allows easy migration from a single-process design to a distributed microservice setup later.
 
 ---
+
+#### Starting the Balance Listener Service
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=app uvicorn main:app
+```
+
+You can register an account to listen to from the swagger page (http://localhost:8000/docs)
