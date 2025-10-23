@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, Any, List, Optional
 from ccxt.base.exchange import Exchange
 import ccxt.async_support as ccxt
@@ -68,35 +69,27 @@ class BaseAdapter:
         self.exchanges.clear()
 
     async def fetch_balances(self) -> List[Dict[str, Any]]:
-        balances = []
+        tasks = {
+            "balance": asyncio.create_task(self.fetch_balance()),
+            "earn": asyncio.create_task(self.fetch_earn_balance()),
+            "positions": asyncio.create_task(self.fetch_positions()),
+            "options": asyncio.create_task(self.fetch_options_positions()),
+        }
 
-        balance = await self.fetch_balance()
-        if balance:
-            balances.append({
-                "category": "balance",
-                "data": balance
-            })
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
-        earn = await self.fetch_earn_balance()
-        if earn:
-            balances.append({
-                "category": "earn",
-                "data": earn
-            })
+        balances: List[Dict[str, Any]] = []
+        for category, result in zip(tasks.keys(), results):
+            if isinstance(result, Exception):
+                # Log but don't fail the entire batch
+                logger.warning(f"{category} fetch failed: {result}")
+                continue
 
-        positions = await self.fetch_positions()
-        if positions:
-            balances.append({
-                "category": "positions",
-                "data": positions
-            })
-
-        options = await self.fetch_options_balance()
-        if options:
-            balances.append({
-                "category": "options",
-                "data": options
-            })
+            if result:
+                balances.append({
+                    "category": category,
+                    "data": result
+                })
 
         return balances
 
@@ -138,7 +131,7 @@ class BaseAdapter:
             logger.error(f"fetch_positions() error: {e}")
             return None
         
-    async def fetch_options_balance(self, params={}) -> Dict[str, Any]:
+    async def fetch_options_positions(self, params={}) -> Dict[str, Any]:
         exchange = self.exchanges.get("options") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_option_positions")
         if not fetch_method:

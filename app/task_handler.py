@@ -1,3 +1,4 @@
+import asyncio
 from app.credentials import get_credentials_for_account
 from app.ccxt.adapters import get_adapter
 from app.utils.logging import get_logger
@@ -9,6 +10,13 @@ logger = get_logger("task_handler")
 
 class FetchTaskHandler(TaskProcessor):
     async def process(self, task: dict):
+        try:
+            await self.process_fetch_task(task)
+        except asyncio.CancelledError:
+            logger.warning("TaskProcessor cancelled during fetch task.")
+            raise
+
+    async def process_fetch_task(self, task: dict):
         account_id = task.get("account_id")
         fetch_type = task.get("type", "balances")
 
@@ -31,13 +39,20 @@ class FetchTaskHandler(TaskProcessor):
                         logger.info(f"No balances for {exchange}:{account_id}")
                         return
 
-                    # Publish each balance category
+                    # Publish each balance category concurrently
+                    publish_tasks = []
+
                     for balance in all_balances:
                         category = balance.get("category")
                         data = balance.get("data")
 
                         topic = f"{category}.{exchange}.{account_id}"
-                        await self._publish(topic, data)
+                        publish_tasks.append(
+                            asyncio.create_task(self._publish(topic, data))
+                        )
+
+                    # Wait for all publish tasks to complete
+                    await asyncio.gather(*publish_tasks, return_exceptions=True)
 
                 elif fetch_type == "funding_fees":
                     funding_fees = await adapter.fetch_funding_fees()

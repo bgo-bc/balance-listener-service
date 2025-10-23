@@ -1,6 +1,7 @@
 import asyncio
 from typing import List
 from app.type_defs import TaskProcessor
+from app.utils.queue import TaskQueue
 from app.utils.logging import get_logger
 
 
@@ -8,7 +9,7 @@ logger = get_logger("worker_pool")
 
 
 class WorkerPool:
-    def __init__(self, queue: asyncio.Queue, processor: TaskProcessor, worker_count: int = 4):
+    def __init__(self, queue: TaskQueue, processor: TaskProcessor, worker_count: int = 4):
         self.queue = queue
         self.worker_count = worker_count
         self.processor = processor
@@ -36,17 +37,24 @@ class WorkerPool:
             pass
 
     async def _worker_loop(self, worker_id: int):
-        while not self._stopped.is_set():
-            try:
+        try:
+            while not self._stopped.is_set():
                 task = await self.queue.get()
                 if not task:
                     await asyncio.sleep(0.1)
                     continue
 
                 logger.info(f"Worker[{worker_id}] processing task: {task}")
-                await self.processor.process(task)
-                await self.queue.task_done()
 
-            except Exception as e:
-                logger.error(f"Worker {worker_id} error: {e}")
-                await asyncio.sleep(1)
+                try:
+                    await self.processor.process(task)
+                except asyncio.CancelledError:
+                    logger.info(f"Worker[{worker_id}] was cancelled during processing.")
+                    raise
+                except Exception as e:
+                    logger.warning(f"Worker {worker_id} error: {e}")
+                finally:
+                    await self.queue.task_done()
+        except asyncio.CancelledError:
+            logger.info(f"Worker[{worker_id}] cancelled.")
+            raise
