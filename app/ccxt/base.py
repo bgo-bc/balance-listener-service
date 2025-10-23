@@ -13,8 +13,12 @@ class BaseAdapter:
         self.credentials = credentials or {}
         self.exchanges: Dict[str, Exchange] = {}
         self.connectors = {
-            "default": self.exchange_id
+            "default": {
+                "name": self.exchange_id,
+                "options": None
+            }
         }
+        self.demo = False
         self.testnet = True
 
     async def __aenter__(self):
@@ -35,14 +39,23 @@ class BaseAdapter:
             "secret": credentials.get("secret"),
         }
         instances = {}
-        for key, ccxt_name in self.connectors.items():
-            ex_class = getattr(ccxt, ccxt_name, None)
-            if ex_class:
-                ex_instance: Exchange = ex_class(params)
+        for key, profile in self.connectors.items():
+            name = profile.get("name")
+            options = profile.get("options") or {}
+            connector_class = getattr(ccxt, name, None)
+
+            if connector_class:
+                ex_instance: Exchange = connector_class(params)
+                for option, value in options.items():
+                    ex_instance.options[option] = value
+
                 instances[key] = ex_instance
 
                 if self.testnet:
                     ex_instance.set_sandbox_mode(True)
+                
+                if self.demo:
+                    ex_instance.enable_demo_trading(True)
 
         return instances
 
@@ -91,28 +104,67 @@ class BaseAdapter:
         exchange = self.exchanges.get("balance") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_balance")
         if not fetch_method:
+            logger.info(f"Exchange {self.exchange_id} does not have fetch_balance() method")
             return None
         
-        return await fetch_method(params=params)
+        try:
+            balances = await fetch_method(params=params)
+            if not balances:
+                return balances
+
+            # Keep the top-level keys with total > 0
+            filtered = {
+                symbol: balance
+                for symbol, balance in balances.items()
+                if symbol != 'info' and isinstance(balance, dict) and balance.get('total', 0) > 0
+            }
+
+            return filtered
+
+        except Exception as e:
+            logger.error(f"fetch_balance() error: {e}")
+            return None
 
     async def fetch_positions(self, params={}) -> Dict[str, Any]:
         exchange = self.exchanges.get("positions") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_positions")
         if not fetch_method:
+            logger.info(f"Exchange {self.exchange_id} does not have fetch_positions() method")
             return None
         
-        return await fetch_method(params=params)
-
+        try:
+            return await fetch_method(params=params)
+        except Exception as e:
+            logger.error(f"fetch_positions() error: {e}")
+            return None
+        
     async def fetch_options_balance(self, params={}) -> Dict[str, Any]:
         exchange = self.exchanges.get("options") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_option_positions")
         if not fetch_method:
+            logger.info(f"Exchange {self.exchange_id} does not have fetch_option_positions() method")
             return None
         
-        return await fetch_method(params=params)
+        try:
+            return await fetch_method(params=params)
+        except Exception as e:
+            logger.error(f"fetch_options_balance() error: {e}")
+            return None
 
     async def fetch_earn_balance(self) -> Dict[str, Any]:
+        logger.error(f"fetch_earn_balance() not implemented")
         return None
 
-    async def fetch_funding_fees(self) -> List[Dict[str, Any]]:
-        return None
+    async def fetch_funding_fees(self) -> Dict[str, Any]:
+        exchange = self.exchanges.get("funding_fee") or self.exchanges.get("default")
+        fetch_method = getattr(exchange, "fetch_funding_history")
+
+        if not fetch_method:
+            logger.info(f"Exchange {self.exchange_id} does not have fetch_funding_history() method")
+            return None
+        
+        try:
+            return await fetch_method()
+        except Exception as e:
+            logger.error(f"fetch_funding_fees() error: {e}")
+            return None

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
+from app.nats_publisher import nats_publisher
 from app.utils.queue import TaskQueue
 from app.task_scheduler import Scheduler
 from app.worker_pool import WorkerPool
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI):
     worker_pool = WorkerPool(TASK_QUEUE, task_handler, worker_count=4)
     await worker_pool.start()
 
+    await nats_publisher.connect()
+
     yield
 
     logger.info("Shutting down Balance Aggregator app")
@@ -40,6 +43,8 @@ async def lifespan(app: FastAPI):
         await scheduler.stop()
     if worker_pool:
         await worker_pool.stop()
+
+    await nats_publisher.disconnect()
 
 
 app = FastAPI(lifespan=lifespan)

@@ -16,3 +16,17 @@ class DeribitAdapter(BaseAdapter):
         return await super().fetch_positions(params={
             "kind": "option"
         })
+    
+    async def fetch_funding_fees(self) -> Dict[str, Any]:
+        exchange = self.exchanges.get("funding_fee") or self.exchanges.get("default")
+        fetch_method = getattr(exchange, "fetch_funding_rate_history")
+
+        if not fetch_method:
+            logger.info(f"Exchange {self.exchange_id} does not have fetch_funding_rate_history() method")
+            return None
+        
+        try:
+            return await fetch_method(symbol="BTC-PERPETUAL")
+        except Exception as e:
+            logger.error(f"fetch_funding_fees() error: {e}")
+            return None

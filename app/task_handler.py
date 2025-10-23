@@ -2,8 +2,9 @@ from app.credentials import get_credentials_for_account
 from app.ccxt.adapters import get_adapter
 from app.utils.logging import get_logger
 from app.type_defs import TaskProcessor
+from app.nats_publisher import nats_publisher
 
-logger = get_logger("task_processor")
+logger = get_logger("task_handler")
 
 
 class FetchTaskHandler(TaskProcessor):
@@ -35,7 +36,7 @@ class FetchTaskHandler(TaskProcessor):
                         category = balance.get("category")
                         data = balance.get("data")
 
-                        topic = f"{category}_balance.{exchange}.{account_id}"
+                        topic = f"{category}.{exchange}.{account_id}"
                         await self._publish(topic, data)
 
                 elif fetch_type == "funding_fees":
@@ -55,7 +56,4 @@ class FetchTaskHandler(TaskProcessor):
                 logger.error(f"Processor error for {exchange}:{account_id} ({fetch_type}): {e}")
 
     async def _publish(self, topic: str, data):
-        # TODO: Replace with NATS publish
-        size = len(data) if isinstance(data, dict) else "?"
-        # logger.info(f"[PUBLISH] topic: {topic}, count: {size}, data: {data}")
-        logger.info(f"[PUBLISH] topic: {topic}, count: {size}")
+        await nats_publisher.publish(topic, data)

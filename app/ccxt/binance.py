@@ -6,15 +6,39 @@ from app.utils.logging import get_logger
 
 logger = get_logger("ccxt_binance_adapter")
 
-
 class BinanceAdapter(BaseAdapter):
     def __init__(self, exchange_id: str, credentials: Optional[dict[str, str]] = None):
         super().__init__(exchange_id, credentials)
+        self.testnet = False
+        self.demo = True
         self.connectors = {
-            "default": self.exchange_id,
-            "balance": "binance",
-            "options": "binance",
-            "positions": "binanceusdm",
+            "default": {
+                "name": "binance"
+            },
+            "balance": {
+                "name": "binance",
+                "options": {
+                    "defaultType": "spot"
+                }
+            },
+            "options": {
+                "name": "binance",
+                "options": {
+                    "defaultType": "option"
+                }
+            },
+            "positions": {
+                "name": "binanceusdm",
+                "options": {
+                    "defaultType": "future"
+                }
+            }
         }
 
-
+    async def fetch_earn_balance(self) -> Dict[str, Any]:
+        exchange: ccxt.binance = self.exchanges.get("default")
+        try:
+            return await exchange.sapi_get_simple_earn_flexible_position()
+        except Exception as e:
+            logger.error(f"fetch_earn_balance() error: {e}")
+            return None
