@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from app.utils.queue import TaskQueue
@@ -14,27 +14,27 @@ class TaskScheduler:
         self.queue = queue
         self.scheduler = AsyncIOScheduler()
 
-    async def enqueue_account(self, account_id: str, type: str):
+    async def enqueue_account(self, account_id: str, types: List[str]):
         try:
-            task = FetchTask(account_id=account_id, type=type)
+            task = FetchTask(account_id=account_id, types=types)
             logger.info(f"Enqueueing {type} balance task for account {account_id}")
             await self.queue.put(task.model_dump())
         except Exception as e:
             logger.error(f"Failed to enqueue account {account_id}: {e}")
 
-    async def enqueue_all_accounts(self, type: str):
+    async def enqueue_all_accounts(self, types: List[str]):
         if not self.listening_accounts:
             logger.debug(f"No accounts to enqueue for frequency={type}")
             return
 
         for account_id in list(self.listening_accounts.keys()):
-            await self.enqueue_account(account_id, type)
+            await self.enqueue_account(account_id, types)
 
     async def _balance_check_job(self):
-        await self.enqueue_all_accounts("balances")
+        await self.enqueue_all_accounts(["balance", "earn_balance", "positions", "option_positions"])
 
     async def _funding_fee_check_job(self):
-        await self.enqueue_all_accounts("funding_fees")
+        await self.enqueue_all_accounts(["funding_fees"])
 
     async def start(self):
         if self.scheduler.running:

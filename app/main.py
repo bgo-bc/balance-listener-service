@@ -56,13 +56,15 @@ async def start_listening(req: ListenRequest):
 
     key = req.account_id
     if key in LISTENING_ACCOUNTS:
-        raise HTTPException(status_code=400, detail="Already listening for this account")
+        # raise HTTPException(status_code=400, detail="Already listening for this account")
+        logger.warning(f"Already listening for account[{req.account_id}]")
 
     LISTENING_ACCOUNTS[key] = req.account_id
 
     logger.info(f"Monitoring balance of account[{req.account_id}]")
-    await scheduler.enqueue_account(req.account_id, "balances")
-    await scheduler.enqueue_account(req.account_id, "funding_fees")
+    await scheduler.enqueue_account(
+        req.account_id, ["balance", "earn_balance", "positions", "option_positions", "funding_fees"]
+    )
 
     return {"status": "ok", "listening_key": key}
 

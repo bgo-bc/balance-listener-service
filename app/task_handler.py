@@ -18,7 +18,7 @@ class FetchTaskHandler(TaskProcessor):
 
     async def process_fetch_task(self, task: dict):
         account_id = task.get("account_id")
-        fetch_type = task.get("type", "balances")
+        fetch_types = task.get("types", ["balance"])
 
         creds_info = await get_credentials_for_account(account_id)
         if not creds_info:
@@ -30,45 +30,38 @@ class FetchTaskHandler(TaskProcessor):
 
         exchange_adapter = await get_adapter(exchange, credentials)
         async with exchange_adapter as adapter:
-            try:
-                if fetch_type == "balances":
-                    # Fetch all balances (spot, earn, futures, etc.)
-                    all_balances = await adapter.fetch_balances()
+            fetch_map = {
+                "balance": adapter.fetch_balance,
+                "earn_balance": adapter.fetch_earn_balance,
+                "positions": adapter.fetch_positions,
+                "options": adapter.fetch_options_positions,
+                "funding_fees": adapter.fetch_funding_fees,
+            }
 
-                    if not all_balances:
-                        logger.info(f"No balances for {exchange}:{account_id}")
-                        return
-
-                    # Publish each balance category concurrently
-                    publish_tasks = []
-
-                    for balance in all_balances:
-                        category = balance.get("category")
-                        data = balance.get("data")
-
-                        topic = f"{category}.{exchange}.{account_id}"
-                        publish_tasks.append(
-                            asyncio.create_task(self._publish(topic, data))
-                        )
-
-                    # Wait for all publish tasks to complete
-                    await asyncio.gather(*publish_tasks, return_exceptions=True)
-
-                elif fetch_type == "funding_fees":
-                    funding_fees = await adapter.fetch_funding_fees()
-                    
-                    if not funding_fees:
-                        logger.info(f"No funding fees for {exchange}:{account_id}")
+            async def fetch_and_publish(fetch_type: str, fetch_func):
+                try:
+                    data = await fetch_func()
+                    if not data:
                         return
                     
-                    topic = f"funding_fees.{exchange}.{account_id}"
-                    await self._publish(topic, funding_fees)
+                    topic = f"{fetch_type}.{exchange}.{account_id}"
+                    logger.info(f"Publishing {fetch_type} for {account_id}")
+                    await self._publish(topic, data)
+                except asyncio.CancelledError:
+                    logger.info(f"Cancelled fetch for {fetch_type}:{account_id}")
+                    raise
+                except Exception as e:
+                    logger.warning(f"Error fetching {fetch_type} for {account_id}: {e}")
 
-                else:
-                    logger.warning(f"Unknown fetch_type '{fetch_type}' for {account_id}")
+            # Fetch and publish in parallel
+            tasks = [
+                asyncio.create_task(fetch_and_publish(fetch_type, fetch_func))
+                for fetch_type, fetch_func in fetch_map.items()
+                if fetch_type in fetch_types
+            ]
 
-            except Exception as e:
-                logger.error(f"Processor error for {exchange}:{account_id} ({fetch_type}): {e}")
+            # Wait for all to finish concurrently
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _publish(self, topic: str, data):
         await nats_publisher.publish(topic, data)

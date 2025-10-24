@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Any, Dict, Protocol
+from typing import Any, Dict, List, Protocol
 
 
 class ListenRequest(BaseModel):
@@ -8,7 +8,7 @@ class ListenRequest(BaseModel):
 
 class FetchTask(BaseModel):
     account_id: str
-    type: str
+    types: List[str]
 
 
 class TaskProcessor(Protocol):
