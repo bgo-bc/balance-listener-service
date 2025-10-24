@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -6,10 +5,10 @@ from app.utils.queue import TaskQueue
 from app.type_defs import FetchTask
 from app.utils.logging import get_logger
 
-logger = get_logger("scheduler")
+logger = get_logger("task_scheduler")
 
 
-class Scheduler:
+class TaskScheduler:
     def __init__(self, listening_accounts: Dict[str, dict], queue: TaskQueue):
         self.listening_accounts = listening_accounts
         self.queue = queue

@@ -105,14 +105,13 @@ class BaseAdapter:
             if not balances:
                 return balances
 
-            # Keep the top-level keys with total > 0
-            filtered = {
+            non_empty_balances = {
                 symbol: balance
                 for symbol, balance in balances.items()
-                if symbol != 'info' and isinstance(balance, dict) and balance.get('total', 0) > 0
+                if isinstance(balance, dict) and balance.get('total', 0) > 0
             }
 
-            return filtered
+            return non_empty_balances
 
         except Exception as e:
             logger.error(f"fetch_balance() error: {e}")
@@ -145,7 +144,7 @@ class BaseAdapter:
             return None
 
     async def fetch_earn_balance(self) -> Dict[str, Any]:
-        logger.error(f"fetch_earn_balance() not implemented")
+        logger.error("fetch_earn_balance() not implemented")
         return None
 
     async def fetch_funding_fees(self) -> Dict[str, Any]:

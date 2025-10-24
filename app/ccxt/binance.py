@@ -1,5 +1,4 @@
-from typing import Dict, Any, List, Optional
-from ccxt.base.exchange import Exchange
+from typing import Dict, Any, Optional
 import ccxt.async_support as ccxt
 from app.ccxt.base import BaseAdapter
 from app.utils.logging import get_logger

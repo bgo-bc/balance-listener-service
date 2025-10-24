@@ -3,7 +3,7 @@ import asyncio
 from nats.aio.client import Client as NATS
 from app.utils.logging import get_logger
 
-logger = get_logger("nats")
+logger = get_logger("nats_publisher")
 
 class NatsPublisher:
     def __init__(self, nats_url="nats://0.0.0.0:4222"):

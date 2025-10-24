@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
 from app.nats_publisher import nats_publisher
 from app.utils.queue import TaskQueue
-from app.task_scheduler import Scheduler
+from app.task_scheduler import TaskScheduler
 from app.worker_pool import WorkerPool
 from app.task_handler import FetchTaskHandler
 from app.type_defs import ListenRequest
@@ -17,7 +17,7 @@ LISTENING_ACCOUNTS: dict[str, dict] = {}
 # Shared async queue for the scheduler and worker instances
 TASK_QUEUE = TaskQueue()
 
-scheduler: Scheduler = None
+scheduler: TaskScheduler = None
 worker_pool: WorkerPool = None
 
 
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 
     logger.info("Starting Balance Aggregator app")
 
-    scheduler = Scheduler(LISTENING_ACCOUNTS, TASK_QUEUE)
+    scheduler = TaskScheduler(LISTENING_ACCOUNTS, TASK_QUEUE)
     await scheduler.start()
 
     task_handler = FetchTaskHandler()

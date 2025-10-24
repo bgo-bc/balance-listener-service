@@ -31,7 +31,7 @@ class WorkerPool:
                 worker.cancel()
 
             await asyncio.gather(*self._workers, return_exceptions=True)
-            logger.info(f"Workers stopped")
+            logger.info("Workers stopped")
         except Exception as e:
             logger.warning(f"Error while waiting for worker to end: {e}")
             pass
