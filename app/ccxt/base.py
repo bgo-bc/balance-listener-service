@@ -1,5 +1,4 @@
-import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from ccxt.base.exchange import Exchange
 import ccxt.async_support as ccxt
 from app.utils.logging import get_logger
@@ -67,31 +66,6 @@ class BaseAdapter:
             except Exception:
                 pass
         self.exchanges.clear()
-
-    async def fetch_balances(self) -> List[Dict[str, Any]]:
-        tasks = {
-            "balance": asyncio.create_task(self.fetch_balance()),
-            "earn": asyncio.create_task(self.fetch_earn_balance()),
-            "positions": asyncio.create_task(self.fetch_positions()),
-            "options": asyncio.create_task(self.fetch_options_positions()),
-        }
-
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-
-        balances: List[Dict[str, Any]] = []
-        for category, result in zip(tasks.keys(), results):
-            if isinstance(result, Exception):
-                # Log but don't fail the entire batch
-                logger.warning(f"{category} fetch failed: {result}")
-                continue
-
-            if result:
-                balances.append({
-                    "category": category,
-                    "data": result
-                })
-
-        return balances
 
     async def fetch_balance(self, params={}) -> Dict[str, Any]:
         exchange = self.exchanges.get("balance") or self.exchanges.get("default")
