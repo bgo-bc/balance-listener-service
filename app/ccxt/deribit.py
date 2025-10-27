@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 from app.ccxt.base import BaseAdapter
 from app.utils.logging import get_logger
 
@@ -10,12 +10,13 @@ class DeribitAdapter(BaseAdapter):
     def __init__(self, exchange_id: str, credentials: Optional[dict[str, str]] = None):
         super().__init__(exchange_id, credentials)
 
-    async def fetch_options_positions(self) -> Dict[str, Any]:
-        return await super().fetch_positions(params={
+    async def fetch_options_positions(self) -> List[Dict[str, Any]]:
+        positions = await super().fetch_positions(params={
             "kind": "option"
         })
+        return [positions]
     
-    async def fetch_funding_fees(self) -> Dict[str, Any]:
+    async def fetch_funding_fees(self) -> List[Dict[str, Any]]:
         exchange = self.exchanges.get("funding_fee") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_funding_rate_history")
         
@@ -24,7 +25,7 @@ class DeribitAdapter(BaseAdapter):
             return None
         
         try:
-            return await fetch_method(symbol="BTC-PERPETUAL")
+            return [await fetch_method(symbol="BTC-PERPETUAL")]
         except Exception as e:
             logger.error(f"fetch_funding_fees() error: {e}")
             return None

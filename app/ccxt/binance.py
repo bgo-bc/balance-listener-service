@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 import ccxt.async_support as ccxt
 from app.ccxt.base import BaseAdapter
 from app.utils.logging import get_logger
@@ -31,13 +31,22 @@ class BinanceAdapter(BaseAdapter):
                 "options": {
                     "defaultType": "future"
                 }
+            },
+            "positions-inverse": {
+                "name": "binancecoinm",
+                "options": {
+                    "defaultType": "future"
+                }
             }
         }
 
-    async def fetch_earn_balance(self) -> Dict[str, Any]:
+    async def fetch_earn_balance(self) -> List[Dict[str, Any]]:
         exchange: ccxt.binance = self.exchanges.get("default")
         try:
-            return await exchange.sapi_get_simple_earn_flexible_position()
+            flexible = await exchange.sapi_get_simple_earn_flexible_position()
+            locked = await exchange.sapi_get_simple_earn_locked_position()
+
+            return [flexible, locked]
         except Exception as e:
             logger.error(f"fetch_earn_balance() error: {e}")
             return None

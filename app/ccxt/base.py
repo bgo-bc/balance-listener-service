@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 from ccxt.base.exchange import Exchange
 import ccxt.async_support as ccxt
 from app.utils.logging import get_logger
@@ -45,17 +45,20 @@ class BaseAdapter:
             connector_class = getattr(ccxt, name, None)
 
             if connector_class:
-                ex_instance: Exchange = connector_class(params)
-                for option, value in options.items():
-                    ex_instance.options[option] = value
+                try:
+                    ex_instance: Exchange = connector_class(params)
+                    for option, value in options.items():
+                        ex_instance.options[option] = value
 
-                instances[key] = ex_instance
+                    instances[key] = ex_instance
 
-                if self.testnet:
-                    ex_instance.set_sandbox_mode(True)
-                
-                if self.demo:
-                    ex_instance.enable_demo_trading(True)
+                    if self.testnet:
+                        ex_instance.set_sandbox_mode(True)
+                    
+                    if self.demo:
+                        ex_instance.enable_demo_trading(True)
+                except Exception as e:
+                    logger.error(f"Failed to initialize connector [{name}]. Error: {e}")
 
         return instances
 
@@ -91,20 +94,40 @@ class BaseAdapter:
             logger.error(f"fetch_balance() error: {e}")
             return None
 
-    async def fetch_positions(self, params={}) -> Dict[str, Any]:
+    async def fetch_positions(self, params={}) -> List[Dict[str, Any]]:
+        positions = []
+
+        # linear (default)
         exchange = self.exchanges.get("positions") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_positions")
-        if not fetch_method:
-            logger.info(f"Exchange {self.exchange_id} does not have fetch_positions() method")
-            return None
+        if fetch_method:
+            try:
+                logger.info("Fetching positions (linear)")
+                linear = await fetch_method(params=params)
+                positions.append(linear)
+            except Exception as e:
+                logger.error(f"fetch_positions() error: {e}")
+        else:
+            logger.info(f"Exchange {exchange} does not have fetch_positions() method")
         
-        try:
-            return await fetch_method(params=params)
-        except Exception as e:
-            logger.error(f"fetch_positions() error: {e}")
-            return None
-        
-    async def fetch_options_positions(self, params={}) -> Dict[str, Any]:
+        # inverse
+        exchange = self.exchanges.get("positions-inverse")
+        if exchange:
+            fetch_method = getattr(exchange, "fetch_positions")
+            if fetch_method:
+                try:
+                    logger.info("Fetching positions (inverse)")
+                    inverse = await fetch_method(params=params)
+                    positions.append(inverse)
+                except Exception as e:
+                    logger.error(f"fetch_positions() error: {e}")
+
+            else:
+                logger.info(f"Exchange {exchange} does not have fetch_positions() method")
+    
+        return positions
+
+    async def fetch_options_positions(self, params={}) -> List[Dict[str, Any]]:
         exchange = self.exchanges.get("options") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_option_positions")
         if not fetch_method:
@@ -112,16 +135,16 @@ class BaseAdapter:
             return None
         
         try:
-            return await fetch_method(params=params)
+            return [await fetch_method(params=params)]
         except Exception as e:
             logger.error(f"fetch_options_balance() error: {e}")
             return None
 
-    async def fetch_earn_balance(self) -> Dict[str, Any]:
+    async def fetch_earn_balance(self) -> List[Dict[str, Any]]:
         logger.error("fetch_earn_balance() not implemented")
         return None
 
-    async def fetch_funding_fees(self) -> Dict[str, Any]:
+    async def fetch_funding_fees(self) -> List[Dict[str, Any]]:
         exchange = self.exchanges.get("funding_fee") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_funding_history")
 
@@ -130,7 +153,7 @@ class BaseAdapter:
             return None
         
         try:
-            return await fetch_method()
+            return [await fetch_method()]
         except Exception as e:
             logger.error(f"fetch_funding_fees() error: {e}")
             return None

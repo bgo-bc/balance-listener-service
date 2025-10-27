@@ -1,4 +1,5 @@
 import asyncio
+from typing import Dict, List, Union
 from app.credentials import get_credentials_for_account
 from app.ccxt.adapters import get_adapter
 from app.utils.logging import get_logger
@@ -40,12 +41,14 @@ class FetchTaskHandler(TaskProcessor):
 
             async def fetch_and_publish(fetch_type: str, fetch_func):
                 try:
+                    logger.info(f"Fetching {fetch_type} for {account_id}")
                     data = await fetch_func()
                     if not data:
+                        logger.info(f"No {fetch_type} data fetched  for {account_id}")
                         return
                     
                     topic = f"{fetch_type}.{exchange}.{account_id}"
-                    logger.info(f"Publishing {fetch_type} for {account_id}")
+                    logger.info(f"Publishing {fetch_type} data for {account_id}")
                     await self._publish(topic, data)
                 except asyncio.CancelledError:
                     logger.info(f"Cancelled fetch for {fetch_type}:{account_id}")
@@ -63,5 +66,9 @@ class FetchTaskHandler(TaskProcessor):
             # Wait for all to finish concurrently
             await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def _publish(self, topic: str, data):
-        await nats_publisher.publish(topic, data)
+    async def _publish(self, topic: str, data: Union[List[Dict], Dict]):
+        payloads = data if isinstance(data, list) else [data]
+        await asyncio.gather(*[
+            nats_publisher.publish(topic, payload)
+            for payload in payloads
+        ])
