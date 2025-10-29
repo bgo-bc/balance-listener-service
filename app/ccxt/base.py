@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional
 from ccxt.base.exchange import Exchange
-import ccxt.async_support as ccxt
+import ccxt.pro as ccxt
 from app.utils.logging import get_logger
 
 
@@ -157,3 +157,14 @@ class BaseAdapter:
         except Exception as e:
             logger.error(f"fetch_funding_fees() error: {e}")
             return None
+
+    async def watch_balance(self):
+        exchange = self.exchanges.get("balance") or self.exchanges.get("default")
+        watch_method = getattr(exchange, "watch_balance")
+        return await watch_method()
+    
+    async def watch_positions(self):
+        exchange = self.exchanges.get("positions") or self.exchanges.get("default")
+        watch_method = getattr(exchange, "watch_positions")
+        return await watch_method()
+    
