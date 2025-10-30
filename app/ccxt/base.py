@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, Any, List, Optional
 from ccxt.base.exchange import Exchange
 import ccxt.pro as ccxt
@@ -20,6 +21,7 @@ class BaseAdapter:
         }
         self.demo = False
         self.testnet = True
+        self.verbose = True
 
     async def __aenter__(self):
         await self._init_exchanges()
@@ -57,6 +59,8 @@ class BaseAdapter:
                     
                     if self.demo:
                         ex_instance.enable_demo_trading(True)
+
+                    ex_instance.verbose = self.verbose
                 except Exception as e:
                     logger.error(f"Failed to initialize connector [{name}]. Error: {e}")
 
@@ -164,7 +168,23 @@ class BaseAdapter:
         return await watch_method()
     
     async def watch_positions(self):
-        exchange = self.exchanges.get("positions") or self.exchanges.get("default")
-        watch_method = getattr(exchange, "watch_positions")
-        return await watch_method()
-    
+        exchange: Exchange = self.exchanges.get("positions") or self.exchanges.get("default")        
+        exchange_inverse: Exchange = self.exchanges.get("positions-inverse")
+        
+        if exchange_inverse and getattr(exchange_inverse, "watch_positions"):
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(exchange.watch_positions()),
+                    asyncio.create_task(exchange_inverse.watch_positions())
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            for result in done:
+                return await result
+        else:
+            if not getattr(exchange, "watch_positions"):
+                logger.info(f"Exchange {self.exchange_id} does not have watch_positions() method")
+                return None
+            
+            return await exchange.watch_positions()

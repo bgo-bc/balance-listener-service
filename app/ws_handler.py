@@ -20,6 +20,8 @@ class WebsocketHandler:
 
         while self.listening and account_id in self.listening_accounts:
             try:
+                data = None
+
                 if stream_type == "balance":
                     data = await asyncio.wait_for(adapter.watch_balance(), timeout=60.0)
                 elif stream_type == "positions":
@@ -28,6 +30,9 @@ class WebsocketHandler:
                     logger.warning(f"Unknown stream type: {stream_type}")
                     return
 
+                if not data:
+                    continue
+                
                 await nats_publisher.publish(topic_prefix, data)
 
             except asyncio.TimeoutError:
