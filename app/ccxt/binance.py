@@ -16,27 +16,27 @@ class BinanceAdapter(BaseAdapter):
             },
             "balance": {
                 "name": "binance",
-                "options": {
-                    "defaultType": "spot"
-                }
+                # "options": {
+                #     "defaultType": "spot"
+                # }
             },
-            "options": {
-                "name": "binance",
-                "options": {
-                    "defaultType": "option"
-                }
-            },
+            # "options": {
+            #     "name": "binance",
+            #     "options": {
+            #         "defaultType": "option"
+            #     }
+            # },
             "positions": {
                 "name": "binanceusdm",
-                "options": {
-                    "defaultType": "future"
-                }
+                # "options": {
+                #     "defaultType": "future"
+                # }
             },
             "positions-inverse": {
                 "name": "binancecoinm",
-                "options": {
-                    "defaultType": "delivery"
-                }
+                # "options": {
+                #     "defaultType": "delivery"
+                # }
             }
         }
 
