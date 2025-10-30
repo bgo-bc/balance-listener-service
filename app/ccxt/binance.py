@@ -35,7 +35,7 @@ class BinanceAdapter(BaseAdapter):
             "positions-inverse": {
                 "name": "binancecoinm",
                 "options": {
-                    "defaultType": "future"
+                    "defaultType": "delivery"
                 }
             }
         }
