@@ -7,8 +7,8 @@ credentials = {
 
         # https://test.deribit.com/account/BTC/api
         "credentials": {
-            "apiKey": "S7rgcsDs", 
-            "secret": "yEv8rojgtHv2es404_OM2gzWrIa3ZQPgKfzBJs-wqzg"
+            "apiKey": "", 
+            "secret": ""
         },
     },
     "demo-binance-account-123": {
@@ -16,8 +16,8 @@ credentials = {
 
         # https://demo.binance.com/en/my/settings/api-management
         "credentials": {
-            "apiKey": "2VGbmZjv4uUwk1Lma4b2KaMUkwGJIfrpOo1kO7igN2E3hxHCUjSlnZKpHr7ntumS",
-            "secret": "p5hTk3JdXKmZ7fmxPdWuhYhCQa9oZd7uATPvuZ9286y1gj5jkc4QdjFvQgGgwYW8"
+            "apiKey": "",
+            "secret": ""
         }
     }
 }
