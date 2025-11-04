@@ -79,12 +79,12 @@ class BaseAdapter:
         fetch_method = getattr(exchange, "fetch_balance")
         if not fetch_method:
             logger.info(f"Exchange {self.exchange_id} does not have fetch_balance() method")
-            return None
+            return []
         
         try:
             balances = await fetch_method(params=params)
             if not balances:
-                return balances
+                return []
 
             non_empty_balances = {
                 symbol: balance
@@ -96,7 +96,7 @@ class BaseAdapter:
 
         except Exception as e:
             logger.error(f"fetch_balance() error: {e}")
-            return None
+            return []
 
     async def fetch_positions(self, params={}) -> List[Dict[str, Any]]:
         positions = []
@@ -136,31 +136,31 @@ class BaseAdapter:
         fetch_method = getattr(exchange, "fetch_option_positions")
         if not fetch_method:
             logger.info(f"Exchange {self.exchange_id} does not have fetch_option_positions() method")
-            return None
+            return []
         
         try:
             return [await fetch_method(params=params)]
         except Exception as e:
             logger.error(f"fetch_options_balance() error: {e}")
-            return None
+            return []
 
     async def fetch_earn_balance(self) -> List[Dict[str, Any]]:
         logger.error("fetch_earn_balance() not implemented")
-        return None
+        return []
 
     async def fetch_funding_fees(self) -> List[Dict[str, Any]]:
-        exchange = self.exchanges.get("funding_fee") or self.exchanges.get("default")
+        exchange = self.exchanges.get("funding_fees") or self.exchanges.get("default")
         fetch_method = getattr(exchange, "fetch_funding_history")
 
         if not fetch_method:
             logger.info(f"Exchange {self.exchange_id} does not have fetch_funding_history() method")
-            return None
+            return []
         
         try:
             return [await fetch_method()]
         except Exception as e:
             logger.error(f"fetch_funding_fees() error: {e}")
-            return None
+            return []
 
     async def watch_balance(self):
         exchange = self.exchanges.get("balance") or self.exchanges.get("default")

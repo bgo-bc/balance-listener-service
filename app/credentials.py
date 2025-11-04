@@ -19,6 +19,15 @@ credentials = {
             "apiKey": "",
             "secret": ""
         }
+    },
+    "demo-gateio-account-123": {
+        "exchange": "gateio",
+
+        # https://testnet.gate.com/myaccount/profile/api-key/save
+        "credentials": {
+            "apiKey": "",
+            "secret": ""
+        }
     }
 }
 
