@@ -17,14 +17,14 @@ class TaskScheduler:
     async def enqueue_account(self, account_id: str, types: List[str]):
         try:
             task = FetchTask(account_id=account_id, types=types)
-            logger.info(f"Enqueueing {type} balance task for account {account_id}")
+            logger.info(f"Enqueueing {types} tasks for account {account_id}")
             await self.queue.put(task.model_dump())
         except Exception as e:
             logger.error(f"Failed to enqueue account {account_id}: {e}")
 
     async def enqueue_all_accounts(self, types: List[str]):
         if not self.listening_accounts:
-            logger.debug(f"No accounts to enqueue for frequency={type}")
+            logger.debug(f"No accounts to enqueue")
             return
 
         for account_id in list(self.listening_accounts.keys()):
@@ -52,7 +52,7 @@ class TaskScheduler:
         )
         self.scheduler.add_job(
             self._funding_fee_check_job,
-            IntervalTrigger(hours=8),
+            IntervalTrigger(minutes=1),
             id="funding_fee_check_job",
             coalesce=True,
             max_instances=1,
