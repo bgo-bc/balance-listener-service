@@ -28,6 +28,15 @@ credentials = {
             "apiKey": "",
             "secret": ""
         }
+    },
+    "demo-bybit-account-123": {
+        "exchange": "bybit",
+
+        # https://testnet.bybit.com/app/user/api-management
+        "credentials": {
+            "apiKey": "",
+            "secret": ""
+        }
     }
 }
 
