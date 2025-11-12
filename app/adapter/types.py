@@ -5,6 +5,7 @@ class EndpointConfig(BaseModel):
     path: str
     params: Dict[str, Any] = Field(default_factory=dict)
     requires_auth: bool = False
+    translation: Dict[str, Any] = Field(default_factory=dict) # not yet supported
 
 class AdapterConfig(BaseModel):
     exchange: str

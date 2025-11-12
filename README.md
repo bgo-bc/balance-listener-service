@@ -1,7 +1,6 @@
 # Balance Listener Service
 
-The **Balance Listener Service** is a modular Python application designed to aggregate and normalize cryptocurrency account balances across multiple exchanges using [ccxt](https://github.com/ccxt/ccxt).  
-It is structured as a monolithic app for now but architected to support distributed deployment in the future.
+The **Balance Listener Service** is a modular Python application designed to aggregate and normalize cryptocurrency account balances across multiple exchanges.  
 
 ---
 
@@ -24,9 +23,7 @@ Balances are fetched periodically by a scheduler. Accounts to be monitored are r
 - **Async In-Memory Queue** — holds pending balance-fetch tasks (replaceable with Redis, NATS, or Celery in future)  
 - **Scheduler** — periodically enqueues balance fetch tasks for registered accounts  
 - **Worker(s)** — consume tasks from the queue and perform the actual balance retrieval  
-- **Exchange Adapter** — a thin abstraction over `ccxt` to handle multiple exchanges consistently
-
-This structure allows easy migration from a single-process design to a distributed microservice setup later.
+- **Meta Adapter** — exchange abstraction layer that can be configured dynamically (e.g. url endpoints, response translation)
 
 ---
 
@@ -44,7 +41,27 @@ uvicorn app.main:app
 Once the service is running, open your browser to:
 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 
-From there, you can **register an account** to start listening for balance updates.
+From there, you can configure each exchange adapter's configuration in the ```config/adapter``` endpoint:  
+```
+{
+  "exchange": "binance",
+  "endpoints": {
+    "balance": {
+      "path": "https://demo-api.binance.com/api/v3/account",
+      "params": {},
+      "requires_auth": true,
+      "translation": {} # not yet supported
+    }
+  }
+}
+```
+
+Then, you can **register an account** in the ```poll/account``` endpoint to start listening for balance updates.
+```
+{
+  "account_id": "demo-binance-account-123"
+}
+```
 
 ---
 

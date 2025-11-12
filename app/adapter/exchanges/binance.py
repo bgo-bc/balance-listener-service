@@ -11,8 +11,6 @@ logger = get_logger("binance")
 
 class binance(BaseAdapter):
     def sign(self, endpoint, params):
-        logger.info("Signing!")
-
         params["timestamp"] = int(time.time() * 1000)
         query = urlencode(params)
         signature = hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
