@@ -47,36 +47,38 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/poll/start")
+@app.post("/listeners")
 async def start_polling(req: ListenRequest):
     global scheduler
 
     key = req.account_id
     if key in POLLING_ACCOUNTS:
         logger.warning(f"Already listening for account[{req.account_id}]")
+        raise HTTPException(status_code=409, detail="Already listening")
 
     POLLING_ACCOUNTS[key] = req.model_dump()
+    logger.info(f"Registered account[{req.account_id}] for balance monitoring")
 
-    logger.info(f"Monitoring balance of account[{req.account_id}]")
     await scheduler.enqueue_account(
-        req.account_id, ["balance", "earn_balance", "positions", "option_positions", "funding_fees"]
+        req.account_id,
+        ["balance", "earn_balance", "positions", "option_positions", "funding_fees"]
     )
 
-    return {"status": "ok", "listening_key": key}
+    return {"status": "registered", "account_id": key}
 
 
-@app.post("/poll/stop")
-async def stop_polling(req: ListenRequest):
-    key = req.account_id
-    if key not in POLLING_ACCOUNTS:
-        raise HTTPException(status_code=404, detail="Not found")
+@app.delete("/listeners/{account_id}")
+async def stop_polling(account_id: str):
+    if account_id not in POLLING_ACCOUNTS:
+        raise HTTPException(status_code=404, detail="Account not found")
 
-    logger.info(f"Stopping to monitor balance of account[{req.account_id}]")
-    del POLLING_ACCOUNTS[key]
-    return {"status": "stopped", "listening_key": key}
+    del POLLING_ACCOUNTS[account_id]
+    logger.info(f"Unregistered account[{account_id}] from balance monitoring")
+
+    return {"status": "unregistered", "account_id": account_id}
 
 
-@app.post("/config/adapter")
+@app.post("/configs/adapters")
 async def add_endpoint_config(config: AdapterConfig):
     adapter_registry.register_config(config)
     return {"status": "ok"}

@@ -41,7 +41,7 @@ uvicorn app.main:app
 Once the service is running, open your browser to:
 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 
-From there, you can configure each exchange adapter's configuration in the ```config/adapter``` endpoint:  
+From there, you can configure each exchange adapter's configuration in the ```/configs/adapters``` endpoint:  
 ```
 {
   "exchange": "binance",
@@ -56,7 +56,7 @@ From there, you can configure each exchange adapter's configuration in the ```co
 }
 ```
 
-Then, you can **register an account** in the ```poll/account``` endpoint to start listening for balance updates.
+Then, you can **register an account** in the ```/listeners``` endpoint to start listening for balance updates.
 ```
 {
   "account_id": "demo-binance-account-123"
