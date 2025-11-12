@@ -6,37 +6,29 @@ credentials = {
         "exchange": "deribit",
 
         # https://test.deribit.com/account/BTC/api
-        "credentials": {
-            "apiKey": "", 
-            "secret": ""
-        },
+        "api_key": "", 
+        "secret": ""
     },
     "demo-binance-account-123": {
         "exchange": "binance", 
 
         # https://demo.binance.com/en/my/settings/api-management
-        "credentials": {
-            "apiKey": "",
-            "secret": ""
-        }
+        "api_key": "",
+        "secret": ""
     },
     "demo-gateio-account-123": {
         "exchange": "gateio",
 
         # https://testnet.gate.com/myaccount/profile/api-key/save
-        "credentials": {
-            "apiKey": "",
-            "secret": ""
-        }
+        "api_key": "",
+        "secret": ""
     },
     "demo-bybit-account-123": {
         "exchange": "bybit",
 
         # https://testnet.bybit.com/app/user/api-management
-        "credentials": {
-            "apiKey": "",
-            "secret": ""
-        }
+        "api_key": "",
+        "secret": ""
     }
 }
 

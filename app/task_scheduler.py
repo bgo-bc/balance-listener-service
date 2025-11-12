@@ -2,7 +2,7 @@ from typing import Dict, List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from app.utils.queue import TaskQueue
-from app.type_defs import FetchTask
+from app.types import FetchTask
 from app.utils.logging import get_logger
 
 logger = get_logger("task_scheduler")
@@ -24,7 +24,7 @@ class TaskScheduler:
 
     async def enqueue_all_accounts(self, types: List[str]):
         if not self.listening_accounts:
-            logger.debug(f"No accounts to enqueue")
+            logger.debug("No accounts to enqueue")
             return
 
         for account_id in list(self.listening_accounts.keys()):

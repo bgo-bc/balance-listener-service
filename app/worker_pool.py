@@ -1,6 +1,6 @@
 import asyncio
 from typing import List
-from app.type_defs import TaskProcessor
+from app.types import TaskProcessor
 from app.utils.queue import TaskQueue
 from app.utils.logging import get_logger
 

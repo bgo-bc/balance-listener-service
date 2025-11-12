@@ -5,9 +5,10 @@ from app.utils.queue import TaskQueue
 from app.task_scheduler import TaskScheduler
 from app.worker_pool import WorkerPool
 from app.task_handler import FetchTaskHandler
-from app.type_defs import ListenRequest
-from app.ws_handler import WebsocketHandler
-from app.account_registry import POLLING_ACCOUNTS, STREAMING_ACCOUNTS
+from app.types import ListenRequest
+from app.account_registry import POLLING_ACCOUNTS
+from app.adapter import adapter_registry
+from app.adapter.types import AdapterConfig
 from app.utils.logging import get_logger
 
 logger = get_logger("balance_listener_service")
@@ -17,12 +18,11 @@ TASK_QUEUE = TaskQueue()
 
 scheduler: TaskScheduler = None
 worker_pool: WorkerPool = None
-ws_handler: WebsocketHandler = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global scheduler, worker_pool, ws_handler
+    global scheduler, worker_pool
 
     logger.info("Starting Balance Aggregator app")
 
@@ -35,9 +35,6 @@ async def lifespan(app: FastAPI):
 
     await nats_publisher.connect()
 
-    ws_handler = WebsocketHandler()
-    await ws_handler.start()
-
     yield
 
     logger.info("Shutting down Balance Aggregator app")
@@ -45,7 +42,6 @@ async def lifespan(app: FastAPI):
     await scheduler.stop()
     await worker_pool.stop()
     await nats_publisher.disconnect()
-    await ws_handler.stop()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -80,33 +76,7 @@ async def stop_polling(req: ListenRequest):
     return {"status": "stopped", "listening_key": key}
 
 
-@app.post("/stream/start")
-async def start_streaming(req: ListenRequest):
-    global ws_handler
-
-    key = req.account_id
-    if key in STREAMING_ACCOUNTS:
-        logger.warning(f"Already streaming for account[{req.account_id}]")
-
-    STREAMING_ACCOUNTS[key] = req.model_dump()
-
-    logger.info(f"Streaming balance of account[{req.account_id}]")
-    await ws_handler.watch_account(req.account_id)
-
-    return {"status": "ok", "listening_key": req.account_id}
-
-
-@app.post("/stream/stop")
-async def stop_streaming(req: ListenRequest):
-    global ws_handler
-
-    key = req.account_id
-    if key not in STREAMING_ACCOUNTS:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    logger.info(f"Stopping to stream balance of account[{req.account_id}]")
-    await ws_handler.unwatch_account(req.account_id)
-
-    del STREAMING_ACCOUNTS[key]
-    
-    return {"status": "stopped", "listening_key": req.account_id}
+@app.post("/config/adapter")
+async def add_endpoint_config(config: AdapterConfig):
+    adapter_registry.register_config(config)
+    return {"status": "ok"}
